@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.transaction.Transactional;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -47,12 +48,14 @@ public class PessoaController {
         return dao.save(pessoa);
     }
 
-//    @DeleteMapping("/deletar/{cpf}")
-//    public Optional<Pessoa> excluirPessoa (@PathVariable String cpf){ // Método para excluir uma pessoa
-//        Optional<Pessoa> pessoa = dao.findById(cpf);
-//        dao.deleteById(cpf);
-//        return pessoa;
-//    }
+    // Não será necessário deletar alguma pessoa pelo site, o delete por ser feito diretamente no banco
+    @DeleteMapping("/deletar/{cpf}")
+    @Transactional
+    public Optional<Pessoa> excluirPessoa (@PathVariable String cpf){ // Método para excluir uma pessoa
+        Optional<Pessoa> pessoa = dao.findByCpf(cpf);
+        dao.deleteByCpf(cpf);
+        return pessoa;
+    }
 
     @GetMapping("/login")
     public String login (@RequestBody Pessoa pessoa) {
