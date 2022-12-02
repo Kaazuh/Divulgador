@@ -3,11 +3,14 @@ package com.example.divulgador.controller;
 import com.example.divulgador.ConexaoBanco.ConexaoMySQL;
 import com.example.divulgador.DAO.IPessoa;
 import com.example.divulgador.model.Pessoa;
+import jdk.jshell.execution.Util;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.transaction.Transactional;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -57,22 +60,29 @@ public class PessoaController {
         return pessoa;
     }
 
-    @GetMapping("/login")
-    public String login (@RequestBody Pessoa pessoa) {
+    @PostMapping("/login") // Método para realizar o login
+    public String login (@RequestBody Pessoa pessoa) throws SQLException {
         PreparedStatement pst = null;
         ResultSet rs = null;
         String sql = null;
-        Connection conexao = ConexaoMySQL.getConexaoMySQL(); // Conexão com o banco de dados
-        // Comando SQL para busca de email e senha compatíveis
-        sql = "select * from pessoa where email = ? and senha = md5(?)";
+        Connection conexao = ConexaoMySQL.getConexaoMySQL();
 
-
+        // Comando SQL para busca de cpf e senha compatíveis
+        sql = "SELECT * FROM pessoa WHERE email = ? and senha = md5(?)";
         try {
-            pst = conexao.prepareStatement(sql); // Prepara o comando SQL
-            rs = pst.executeQuery(); // Executa a query
-            return null;
+            // Prepara a consulta ao banco em função do que foi recebido. O "?" é substituído pelo conteúdo das variáveis
+            pst = conexao.prepareStatement(sql);
+            pst.setString(1, pessoa.getEmail());
+            pst.setString(2, pessoa.getSenha());
+            rs = pst.executeQuery(); // Executa Query
+
+            if(rs.next()) { // Retorna um boolean. Se for verdadeiro, significa que há uma linha no banco com cpf e senha compatíveis.
+                return "Logado com sucesso!";
+            } else {
+                return "Login e/ou senha incorreto(s)";
+            }
         } catch (SQLException e) {
-            throw new RuntimeException(e); // Tratamento de exceções
+            throw new RuntimeException(e);
         }
     }
 }
